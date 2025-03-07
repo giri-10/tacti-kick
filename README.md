@@ -1,4 +1,4 @@
-# Set-Piece Optimization Engine
+# Tacti-kick: Set-Piece Optimization Engine
 
 An advanced analytics tool for optimizing football set-pieces using machine learning and data visualization.
 
