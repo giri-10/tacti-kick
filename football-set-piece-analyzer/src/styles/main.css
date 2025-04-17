@@ -1,0 +1,389 @@
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f8f9fa;
+}
+
+.App {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Set Piece Analyzer Layout */
+.set-piece-analyzer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.analyzer-header {
+  text-align: center;
+  padding: 1rem 0;
+  margin-bottom: 1.5rem;
+  background-color: #f0f4f8;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analyzer-header h2 {
+  color: #2c3e50;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.analyzer-content {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+}
+
+.sidebar-left,
+.sidebar-right {
+  flex: 0 0 25%;
+  max-width: 350px;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Cards and panels */
+.team-selector,
+.player-stats-panel,
+.recommendation-panel {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+.empty-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  color: #6c757d;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Team Selector styles */
+.team-selector h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.team-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-size: 1rem;
+}
+
+.team-info {
+  margin-top: 20px;
+}
+
+.stat-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.stat-group {
+  flex: 0 0 48%;
+  margin-bottom: 15px;
+}
+
+.stat-group h5 {
+  color: #495057;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+/* Pitch Visualization */
+.pitch-container {
+  position: relative;
+  width: 100%;
+  height: 70vh;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.pitch-canvas {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.pitch-instructions {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 5px;
+}
+
+/* Recommendation Panel */
+.recommendation-panel h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.recommendation-header {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.recommendation-section {
+  margin-bottom: 20px;
+}
+
+.recommendation-section h5 {
+  color: #495057;
+  margin-bottom: 10px;
+}
+
+.player-card {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.player-card.small {
+  padding: 8px;
+  margin-bottom: 8px;
+}
+
+.player-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.player-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.player-stat {
+  flex: 0 0 calc(50% - 5px);
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.delivery-type {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.delivery-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.delivery-description {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.target-zone {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.zone-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.zone-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.zone-stat {
+  flex: 0 0 calc(50% - 5px);
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.approach {
+  font-weight: bold;
+  background-color: #e9ecef;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+
+.zone-info {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.success-rates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.success-rate {
+  flex: 0 0 calc(50% - 7.5px);
+  background-color: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Player Stats Panel */
+.player-stats-panel h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.category-tabs {
+  display: flex;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.tab {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.tab.active {
+  border-bottom-color: #007bff;
+  color: #007bff;
+  font-weight: bold;
+}
+
+.players-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.player-stat-card {
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.player-header {
+  margin-bottom: 10px;
+}
+
+.player-position {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.player-attributes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.attribute {
+  flex: 0 0 calc(50% - 5px);
+  background-color: #f8f9fa;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.attribute-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.attribute-value {
+  font-weight: bold;
+}
+
+.player-set-piece-stats {
+  display: flex;
+  gap: 10px;
+}
+
+.set-piece-stat {
+  flex: 1;
+  background-color: #e9ecef;
+  padding: 8px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #495057;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #007bff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .analyzer-content {
+    flex-direction: column;
+  }
+  
+  .sidebar-left,
+  .sidebar-right {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .pitch-container {
+    height: 50vh;
+  }
+}

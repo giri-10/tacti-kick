@@ -1,0 +1,112 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.pitch {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    background-color: #4CAF50;
+    border: 2px solid #000;
+}
+
+.pitch .marker {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.team-selector {
+    margin: 20px;
+    padding: 15px;
+}
+
+.player-stats {
+    margin: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.recommendation-panel {
+    margin: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Component-specific styles */
+
+/* PitchVisualization component */
+.pitch-canvas {
+  display: block;
+  background-color: #4CAF50;
+}
+
+/* TeamSelector styles */
+.team-select {
+  font-size: 16px;
+  padding: 8px 12px;
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+}
+
+/* PlayerStats styles */
+.player-stat-card {
+  transition: transform 0.2s;
+}
+
+.player-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* RecommendationPanel styles */
+.recommendation-section {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.recommendation-section:last-child {
+  border-bottom: none;
+}
+
+.player-card {
+  transition: background-color 0.2s;
+}
+
+.player-card:hover {
+  background-color: #f0f0f0;
+}
+
+/* SetPieceAnalyzer layout adjustments */
+.analyzer-content {
+  min-height: calc(100vh - 150px);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .analyzer-content {
+    flex-direction: column;
+  }
+
+  .sidebar-left,
+  .sidebar-right,
+  .main-content {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .pitch-container {
+    height: 50vh;
+    margin-bottom: 20px;
+  }
+}
