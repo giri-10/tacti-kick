@@ -1,83 +1,72 @@
-# Tacti-Kick: Set-Piece Optimization Engine
+# Football Set Piece Analyzer
 
-A data-driven football set-piece optimization tool that provides visual simulations and recommendations for corner kicks, free kicks, and penalties.
+## Overview
+The Football Set Piece Analyzer is a web application designed to analyze set piece data (corners, free kicks, etc.) for football teams. Users can select a team and interact with a visual representation of a football pitch to receive recommendations on set piece execution based on player statistics and historical success rates.
 
 ## Features
-
-- Interactive visual simulations of set-pieces
-- Data-driven recommendations based on historical performance
-- Real-time strategy adjustments
-- Player-specific optimization
-- Beautiful, responsive UI with D3.js visualizations
-
-## Tech Stack
-
-### Frontend
-- React.js
-- D3.js for visualizations
-- React Spring for animations
-- Material-UI for components
-
-### Backend
-- Java Spring Boot
-- Python (for data processing)
-- PostgreSQL
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v14 or higher)
-- Java 17 or higher
-- Python 3.8 or higher
-- PostgreSQL
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/tacti-kick.git
-cd tacti-kick
-```
-
-2. Install frontend dependencies:
-```bash
-cd frontend
-npm install
-```
-
-3. Install backend dependencies:
-```bash
-cd backend
-./mvnw install
-```
-
-4. Start the development servers:
-```bash
-# Frontend (from frontend directory)
-npm start
-
-# Backend (from backend directory)
-./mvnw spring-boot:run
-```
+- Select a football team from a dropdown menu.
+- Click on a visual football pitch to analyze set piece opportunities.
+- Get recommendations on which player should take the set piece.
+- Determine the optimal trajectory for crosses and identify target players.
+- Analyze player statistics, including height and crossing ability.
+- Evaluate whether to take a direct free kick or play it inside based on the distance to the box.
 
 ## Project Structure
+```
+football-set-piece-analyzer
+├── src
+│   ├── components
+│   │   ├── PitchVisualization.js
+│   │   ├── TeamSelector.js
+│   │   ├── SetPieceAnalyzer.js
+│   │   ├── PlayerStats.js
+│   │   └── RecommendationPanel.js
+│   ├── data
+│   │   ├── teams.js
+│   │   ├── players.js
+│   │   └── setpieces.js
+│   ├── utils
+│   │   ├── analytics.js
+│   │   └── visualization.js
+│   ├── services
+│   │   ├── dataFetcher.js
+│   │   └── recommendationEngine.js
+│   ├── styles
+│   │   ├── main.css
+│   │   └── components.css
+│   └── App.js
+├── public
+│   ├── index.html
+│   └── favicon.svg
+├── package.json
+├── .gitignore
+└── README.md
+```
 
-```
-tacti-kick/
-├── frontend/           # React frontend application
-├── backend/           # Spring Boot backend application
-├── data-processing/   # Python scripts for data analysis
-└── docs/             # Project documentation
-```
+## Installation
+1. Clone the repository:
+   ```
+   git clone https://github.com/yourusername/football-set-piece-analyzer.git
+   ```
+2. Navigate to the project directory:
+   ```
+   cd football-set-piece-analyzer
+   ```
+3. Install the dependencies:
+   ```
+   npm install
+   ```
+
+## Usage
+1. Start the development server:
+   ```
+   npm start
+   ```
+2. Open your browser and navigate to `http://localhost:3000` to view the application.
+3. Select a team from the dropdown menu and click on the pitch to analyze set piece opportunities.
 
 ## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
 
 ## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License. See the LICENSE file for details.
