@@ -1,7 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { getPlayersByTeamId } from '../services/dataFetcher';
 
 const PlayerStats = ({ teamId }) => {
+    const [players, setPlayers] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        // Reset state when teamId changes
+        setPlayers([]);
+        setError(null);
+        
+        if (teamId) {
+            setLoading(true);
+            console.log(`Fetching players for team ID: ${teamId}`);
+            
+            getPlayersByTeamId(teamId)
+                .then(playersData => {
+                    console.log('Player data received:', playersData);
+                    // Ensure we always set an array, even if API returns something else
+                    if (Array.isArray(playersData)) {
+                        setPlayers(playersData);
+                    } else {
+                        console.error('Expected array of players but got:', typeof playersData, playersData);
+                        setPlayers([]);
+                        setError('Invalid player data format received');
+                    }
+                    setLoading(false);
+                })
+                .catch(error => {
+                    console.error('Error fetching players:', error);
+                    setPlayers([]);
+                    setError(`Failed to load player data: ${error.message}`);
+                    setLoading(false);
+                });
+        }
+    }, [teamId]);
+    
     if (!teamId) {
         return (
             <div className="player-stats-panel empty-panel">
@@ -10,7 +45,22 @@ const PlayerStats = ({ teamId }) => {
         );
     }
     
-    const players = getPlayersByTeamId(teamId);
+    if (loading) {
+        return (
+            <div className="player-stats-panel loading-panel">
+                <p>Loading player data...</p>
+            </div>
+        );
+    }
+    
+    if (error) {
+        return (
+            <div className="player-stats-panel error-panel">
+                <p>Error: {error}</p>
+                <p>Please try selecting a different team</p>
+            </div>
+        );
+    }
     
     return (
         <div className="player-stats-panel">
@@ -23,14 +73,19 @@ const PlayerStats = ({ teamId }) => {
             </div>
             
             <div className="players-list">
-                {players.map(player => (
-                    <PlayerCard key={player.id} player={player} />
-                ))}
+                {players && players.length > 0 ? (
+                    players.map(player => (
+                        <PlayerCard key={player.id} player={player} />
+                    ))
+                ) : (
+                    <p>No player data available</p>
+                )}
             </div>
         </div>
     );
 };
 
+// PlayerCard component stays the same
 const PlayerCard = ({ player }) => {
     const {
         name,

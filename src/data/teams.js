@@ -21,7 +21,7 @@ export const teams = [
                 goalsScored: 8
             }
         },
-        squad: [1, 2, 5] // player IDs
+        squad: [101, 102, 103, 104, 105, 106] // Updated player IDs
     },
     {
         id: 2,
@@ -45,7 +45,7 @@ export const teams = [
                 goalsScored: 7
             }
         },
-        squad: [3, 8]
+        squad: [201, 202, 203, 204, 205] // Updated player IDs
     },
     {
         id: 3,
@@ -69,7 +69,7 @@ export const teams = [
                 goalsScored: 5
             }
         },
-        squad: [9]
+        squad: [301, 302, 303, 304, 305] // Updated player IDs
     },
     {
         id: 4,
@@ -93,7 +93,7 @@ export const teams = [
                 goalsScored: 6
             }
         },
-        squad: [6]
+        squad: [401, 402, 403, 404, 405] // Updated player IDs
     },
     {
         id: 5,
@@ -117,7 +117,7 @@ export const teams = [
                 goalsScored: 5
             }
         },
-        squad: [10]
+        squad: [501, 502, 503, 504, 505] // Updated player IDs
     },
     {
         id: 6,
@@ -141,7 +141,7 @@ export const teams = [
                 goalsScored: 7
             }
         },
-        squad: [7]
+        squad: [601, 602, 603, 604, 605] // Updated player IDs
     },
     {
         id: 7,
@@ -165,6 +165,6 @@ export const teams = [
                 goalsScored: 9
             }
         },
-        squad: [4]
+        squad: [701, 702, 703, 704, 705] // Updated player IDs
     }
 ];

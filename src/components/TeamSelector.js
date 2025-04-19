@@ -1,8 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { getTeams } from '../services/dataFetcher';
 
 const TeamSelector = ({ onTeamSelect, selectedTeamId }) => {
-    const teams = getTeams();
+    const [teams, setTeams] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    
+    useEffect(() => {
+        const loadTeams = async () => {
+            try {
+                setLoading(true);
+                const teamsData = await getTeams();
+                setTeams(teamsData);
+                setLoading(false);
+            } catch (err) {
+                console.error("Error loading teams:", err);
+                setError("Failed to load teams. Please try again later.");
+                setLoading(false);
+            }
+        };
+        
+        loadTeams();
+    }, []);
     
     const handleTeamChange = (e) => {
         const teamId = parseInt(e.target.value, 10);
@@ -10,6 +29,14 @@ const TeamSelector = ({ onTeamSelect, selectedTeamId }) => {
             onTeamSelect(teamId);
         }
     };
+    
+    if (loading) {
+        return <div className="team-selector">Loading teams...</div>;
+    }
+    
+    if (error) {
+        return <div className="team-selector error">{error}</div>;
+    }
     
     return (
         <div className="team-selector">
@@ -20,14 +47,16 @@ const TeamSelector = ({ onTeamSelect, selectedTeamId }) => {
                 className="team-select"
             >
                 <option value="" disabled>Select a team</option>
-                {teams.map(team => (
+                {teams && teams.length > 0 ? teams.map(team => (
                     <option key={team.id} value={team.id}>
-                        {team.name} ({team.league})
+                        {team.name} {team.league ? `(${team.league})` : ''}
                     </option>
-                ))}
+                )) : (
+                    <option value="" disabled>No teams available</option>
+                )}
             </select>
             
-            {selectedTeamId && (
+            {selectedTeamId && teams.length > 0 && (
                 <div className="team-info">
                     <h4>Set Piece Statistics</h4>
                     <div className="stat-container">
@@ -41,7 +70,7 @@ const TeamSelector = ({ onTeamSelect, selectedTeamId }) => {
 
 // Helper function to render team stats
 const renderTeamStats = (team) => {
-    if (!team) return null;
+    if (!team || !team.setPieceStats) return <div>No statistics available</div>;
     
     const { setPieceStats } = team;
     

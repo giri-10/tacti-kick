@@ -3,54 +3,106 @@ import { drawPitch, drawSetPieceLocation, drawTrajectory, drawPlayer } from '../
 
 const PitchVisualization = ({ onSetPieceSelect, recommendation }) => {
     const canvasRef = useRef(null);
+    const containerRef = useRef(null);
     const [clickPosition, setClickPosition] = useState(null);
     
     // Initialize the pitch visualization
     useEffect(() => {
         const canvas = canvasRef.current;
-        if (canvas) {
-            // Make the canvas responsive
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+        if (!canvas) return;
+        
+        const resizeCanvas = () => {
+            const container = containerRef.current;
+            const containerWidth = container?.clientWidth || window.innerWidth;
+            const containerHeight = container?.clientHeight || window.innerHeight * 0.7;
             
-            // Draw the initial pitch
+            // Set canvas display size to match container
+            canvas.style.width = `${containerWidth}px`;
+            canvas.style.height = `${containerHeight}px`;
+            
+            // Set canvas drawing buffer size (1:1 pixel ratio for exact click coordinates)
+            canvas.width = containerWidth;
+            canvas.height = containerHeight;
+            
+            console.log(`Canvas resized to ${containerWidth}x${containerHeight}`);
+            
+            // Redraw everything
             drawPitch(canvas);
-        }
-    }, []);
+            
+            if (clickPosition) {
+                drawSetPieceLocation(canvas, clickPosition);
+                
+                if (recommendation) {
+                    visualizeRecommendation(canvas, clickPosition, recommendation);
+                }
+            }
+        };
+        
+        // Initial sizing
+        resizeCanvas();
+        
+        // Add resize event listener
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Cleanup
+        return () => {
+            window.removeEventListener('resize', resizeCanvas);
+        };
+    }, [clickPosition, recommendation]);
     
     // Update visualization when recommendation changes
     useEffect(() => {
-        if (!canvasRef.current || !clickPosition) return;
+        if (!canvasRef.current) return;
         
         const canvas = canvasRef.current;
         
         // Redraw the pitch
         drawPitch(canvas);
         
-        // Draw the set piece location
-        drawSetPieceLocation(canvas, clickPosition);
-        
-        // Draw the recommendation visualization if available
-        if (recommendation) {
-            visualizeRecommendation(canvas, clickPosition, recommendation);
+        // Draw the set piece location if we have a click position
+        if (clickPosition) {
+            drawSetPieceLocation(canvas, clickPosition);
+            console.log('Drawing set piece at:', clickPosition);
+            
+            // Draw the recommendation visualization if available
+            if (recommendation) {
+                visualizeRecommendation(canvas, clickPosition, recommendation);
+            }
         }
     }, [clickPosition, recommendation]);
     
-    // Handle canvas click
+    // Handle canvas click with improved coordinate calculation
     const handleCanvasClick = (e) => {
         const canvas = canvasRef.current;
+        if (!canvas) return;
+        
+        // Get the canvas's position relative to the viewport
         const rect = canvas.getBoundingClientRect();
         
-        // Get click position relative to canvas
-        const x = ((e.clientX - rect.left) / canvas.width) * 100;
-        const y = ((e.clientY - rect.top) / canvas.height) * 100;
+        // Calculate click coordinates relative to canvas (in canvas pixels)
+        const relativeX = e.clientX - rect.left;
+        const relativeY = e.clientY - rect.top;
+        
+        // Convert to percentage coordinates (0-100)
+        const x = (relativeX / rect.width) * 100;
+        const y = (relativeY / rect.height) * 100;
+        
+        const position = { x, y };
+        console.log('Click detected at:', { 
+            clientX: e.clientX,
+            clientY: e.clientY,
+            rect: {left: rect.left, top: rect.top, width: rect.width, height: rect.height},
+            canvas: {width: canvas.width, height: canvas.height},
+            relative: {x: relativeX, y: relativeY},
+            percent: {x, y}
+        });
         
         // Update click position
-        setClickPosition({ x, y });
+        setClickPosition(position);
         
         // Notify parent component
         if (onSetPieceSelect) {
-            onSetPieceSelect({ x, y });
+            onSetPieceSelect(position);
         }
     };
     
@@ -142,11 +194,16 @@ const PitchVisualization = ({ onSetPieceSelect, recommendation }) => {
                     drawPlayer(canvas, playerPos, player, { color: '#4CAF50' });
                 });
             }
+        } else if (type === 'penalty') {
+            // For penalties, just show the taker
+            drawPlayer(canvas, position, taker, { color: '#2196F3' });
+            // Draw trajectory to goal
+            drawTrajectory(canvas, position, { x: 50, y: 5 }, 'straight', { color: '#FF9800' });
         }
     };
     
     return (
-        <div className="pitch-container">
+        <div className="pitch-container" ref={containerRef}>
             <canvas 
                 ref={canvasRef} 
                 onClick={handleCanvasClick}

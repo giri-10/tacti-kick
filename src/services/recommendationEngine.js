@@ -6,13 +6,32 @@ import {
     getCornerAnalysis,
     getFreeKickAnalysis,
     getTargetPlayers,
-    getPlayerById
+    getPlayerById,
+    getTallestPlayer,
+    getBestPlayerByFoot
 } from './dataFetcher';
+
+/**
+ * Determines the zone of the pitch (left, right, middle) based on coordinates
+ * @param {Object} coordinates - {x, y} coordinates on the pitch (0-100 for both axes)
+ * @returns {String} - 'left', 'right', or 'middle'
+ */
+export const determinePitchZone = (coordinates) => {
+    const { x } = coordinates;
+    
+    if (x < 33) {
+        return 'left';
+    } else if (x > 66) {
+        return 'right';
+    } else {
+        return 'middle';
+    }
+};
 
 /**
  * Determines the type of set piece based on pitch coordinates
  * @param {Object} coordinates - {x, y} coordinates on the pitch (0-100 for both axes)
- * @returns {String} - 'corner' or 'freeKick'
+ * @returns {String} - 'corner', 'freeKick', or 'penalty'
  */
 export const determineSetPieceType = (coordinates) => {
     const { x, y } = coordinates;
@@ -20,6 +39,11 @@ export const determineSetPieceType = (coordinates) => {
     // Corner detection - near corners of the pitch
     if ((x <= 5 || x >= 95) && (y <= 5 || y >= 95)) {
         return 'corner';
+    }
+    
+    // Penalty detection - inside penalty box (approximately)
+    if (y <= 20 && x >= 30 && x <= 70) {
+        return 'penalty';
     }
     
     // Free kick for everything else
@@ -72,19 +96,195 @@ export const determineCornerType = (coordinates) => {
 };
 
 /**
+ * Determines the optimal foot for a set piece based on position
+ * @param {Object} coordinates - {x, y} coordinates
+ * @returns {String} - 'left' or 'right' foot preference
+ */
+export const determineOptimalFoot = (coordinates) => {
+    const pitchZone = determinePitchZone(coordinates);
+    
+    // If on left side of pitch, prefer right foot for outswinger/inswinger
+    if (pitchZone === 'left') {
+        return 'right';
+    }
+    // If on right side of pitch, prefer left foot
+    else if (pitchZone === 'right') {
+        return 'left';
+    }
+    // Middle can use either, so we return null to find both
+    else {
+        return null;
+    }
+};
+
+/**
+ * Finds the best set piece takers in a team with specific foot preferences
+ * @param {Array} teamPlayers - Array of team players
+ * @returns {Object} - Object with bestLeftFooted and bestRightFooted players
+ */
+export const findBestSetPieceTakers = (teamPlayers) => {
+    let bestLeftFooted = null;
+    let bestRightFooted = null;
+    
+    // First pass: Find players where we know their foot preference
+    for (const player of teamPlayers) {
+        // For left-footed player
+        if (player.foot === 'left') {
+            if (!bestLeftFooted || 
+                (player.setPieceSuccessRate.freeKicks + player.setPieceSuccessRate.corners) > 
+                (bestLeftFooted.setPieceSuccessRate.freeKicks + bestLeftFooted.setPieceSuccessRate.corners)) {
+                bestLeftFooted = player;
+            }
+        }
+        // For right-footed player
+        else if (player.foot === 'right') {
+            if (!bestRightFooted || 
+                (player.setPieceSuccessRate.freeKicks + player.setPieceSuccessRate.corners) > 
+                (bestRightFooted.setPieceSuccessRate.freeKicks + bestRightFooted.setPieceSuccessRate.corners)) {
+                bestRightFooted = player;
+            }
+        }
+    }
+    
+    // If we couldn't find one or both, pick by best overall regardless of foot
+    const allSorted = [...teamPlayers].sort((a, b) => {
+        const aScore = a.setPieceSuccessRate.freeKicks + a.setPieceSuccessRate.corners;
+        const bScore = b.setPieceSuccessRate.freeKicks + b.setPieceSuccessRate.corners;
+        return bScore - aScore;
+    });
+    
+    if (!bestLeftFooted && allSorted.length > 0) {
+        bestLeftFooted = allSorted[0];
+    }
+    
+    if (!bestRightFooted && allSorted.length > 1) {
+        bestRightFooted = allSorted.find(p => p.id !== bestLeftFooted.id) || allSorted[0];
+    }
+    
+    return { bestLeftFooted, bestRightFooted };
+};
+
+/**
  * Generates set piece recommendations based on team and pitch position
  * @param {Number} teamId - Team ID
  * @param {Object} coordinates - {x, y} coordinates on the pitch
  * @returns {Object} - Set piece recommendations
  */
-export const generateRecommendation = (teamId, coordinates) => {
+export const generateRecommendation = async (teamId, coordinates) => {
     const setPieceType = determineSetPieceType(coordinates);
-    const teamPlayers = getPlayersByTeamId(teamId);
+    const teamPlayers = await getPlayersByTeamId(teamId);
+    const pitchZone = determinePitchZone(coordinates);
+    const optimalFoot = determineOptimalFoot(coordinates);
+    
+    // Find the team's best set piece takers based on foot
+    const { bestLeftFooted, bestRightFooted } = findBestSetPieceTakers(teamPlayers);
     
     if (setPieceType === 'corner') {
-        return generateCornerRecommendation(teamId, coordinates, teamPlayers);
+        return generateCornerRecommendation(teamId, coordinates, teamPlayers, pitchZone, bestLeftFooted, bestRightFooted);
+    } else if (setPieceType === 'penalty') {
+        return generatePenaltyRecommendation(teamId, coordinates, teamPlayers, pitchZone);
     } else {
-        return generateFreeKickRecommendation(teamId, coordinates, teamPlayers);
+        return generateFreeKickRecommendation(teamId, coordinates, teamPlayers, pitchZone, bestLeftFooted, bestRightFooted);
+    }
+};
+
+/**
+ * Generates penalty recommendations
+ * @param {Number} teamId - Team ID
+ * @param {Object} coordinates - {x, y} coordinates
+ * @param {Array} teamPlayers - Players from the selected team
+ * @returns {Object} - Penalty recommendations
+ */
+const generatePenaltyRecommendation = async (teamId, coordinates, teamPlayers, pitchZone) => {
+    // Find best penalty taker based on success rate or shooting ability
+    const bestTaker = teamPlayers.reduce((best, player) => {
+        // Check if player has penalty stats
+        const penaltyRate = player.penaltySuccessRate || 0;
+        const bestPenaltyRate = best ? (best.penaltySuccessRate || 0) : 0;
+        
+        if (!best || penaltyRate > bestPenaltyRate) {
+            return player;
+        }
+        return best;
+    }, null);
+    
+    return {
+        type: 'penalty',
+        pitchZone,
+        taker: bestTaker,
+        note: 'Direct penalty kick - no target players needed'
+    };
+};
+
+/**
+ * Find best target players for set pieces
+ * @param {Array} teamPlayers - Array of team players
+ * @returns {Array} - Array of best target players (usually tall and good at scoring)
+ */
+const findBestTargetPlayers = (teamPlayers) => {
+    // Create a scoring formula for each player as a target
+    const playersWithTargetScore = teamPlayers.map(player => {
+        // Height and goals are the most important factors
+        const heightScore = (player.height - 170) * 2; // Taller is better
+        const goalScore = player.goalsFromSetPieces * 10; // More goals is better
+        const positionScore = 
+            player.position.includes('Center Back') || player.position.includes('Defender') ? 30 : 
+            player.position.includes('Striker') ? 25 : 
+            player.position.includes('Forward') ? 20 : 
+            player.position.includes('Midfielder') ? 15 : 0;
+        
+        const totalScore = heightScore + goalScore + positionScore;
+        
+        return {
+            ...player,
+            targetScore: totalScore
+        };
+    });
+    
+    // Sort by target score and return top 3
+    return playersWithTargetScore
+        .sort((a, b) => b.targetScore - a.targetScore)
+        .slice(0, 3);
+};
+
+/**
+ * Determines the best ball trajectory based on taker's foot and pitch position
+ * @param {String} pitchZone - 'left', 'right', or 'middle'
+ * @param {String} foot - 'left' or 'right'
+ * @returns {Object} - Trajectory information
+ */
+const determineBallTrajectory = (pitchZone, foot, setPieceType) => {
+    // For corners
+    if (setPieceType === 'corner') {
+        if (pitchZone === 'left') {
+            return foot === 'right' ? 
+                { type: 'inswinger', description: 'Right-footed inswinging corner from the left' } : 
+                { type: 'outswinger', description: 'Left-footed outswinging corner from the left' };
+        } else { // right corner
+            return foot === 'left' ? 
+                { type: 'inswinger', description: 'Left-footed inswinging corner from the right' } : 
+                { type: 'outswinger', description: 'Right-footed outswinging corner from the right' };
+        }
+    }
+    
+    // For free kicks
+    // Direct free kicks in central areas
+    if (pitchZone === 'middle') {
+        return { 
+            type: 'direct', 
+            description: `${foot === 'left' ? 'Left' : 'Right'}-footed direct free kick aimed at goal` 
+        };
+    }
+    
+    // Wide free kicks
+    if (pitchZone === 'left') {
+        return foot === 'right' ? 
+            { type: 'inswinger', description: 'Right-footed inswinging cross from the left' } : 
+            { type: 'outswinger', description: 'Left-footed outswinging cross from the left' };
+    } else { // right side
+        return foot === 'left' ? 
+            { type: 'inswinger', description: 'Left-footed inswinging cross from the right' } : 
+            { type: 'outswinger', description: 'Right-footed outswinging cross from the right' };
     }
 };
 
@@ -95,52 +295,48 @@ export const generateRecommendation = (teamId, coordinates) => {
  * @param {Array} teamPlayers - Players from the selected team
  * @returns {Object} - Corner recommendations
  */
-const generateCornerRecommendation = (teamId, coordinates, teamPlayers) => {
+const generateCornerRecommendation = async (teamId, coordinates, teamPlayers, pitchZone, bestLeftFooted, bestRightFooted) => {
     const cornerType = determineCornerType(coordinates);
     const cornerData = getCornerAnalysis();
-    const targetData = getTargetPlayers().cornerTargets;
     
-    // Find best taker based on crossing ability and set piece success rate
-    const bestTaker = teamPlayers.reduce((best, player) => {
-        if (!best || player.crossingAbility > best.crossingAbility) {
-            return player;
-        }
-        return best;
-    }, null);
+    // Determine preferred foot based on corner position
+    // Left corner = right foot is optimal for inswingers
+    // Right corner = left foot is optimal for inswingers
+    const preferredFoot = cornerType === 'left' ? 'right' : 'left';
     
-    // Find the best delivery type for this taker
-    const bestDeliveryTypes = cornerData.deliveryTypes.filter(
-        delivery => delivery.bestTakers.includes(bestTaker.id)
-    );
+    // Choose the taker based on preferred foot
+    const bestTaker = preferredFoot === 'left' ? bestLeftFooted : bestRightFooted;
     
-    // Default to the first delivery type if none found
-    const recommendedDelivery = bestDeliveryTypes.length > 0 
-        ? bestDeliveryTypes[0] 
-        : cornerData.deliveryTypes[0];
+    // Find best target players (tall, good at headers)
+    const bestTargets = findBestTargetPlayers(teamPlayers);
     
-    // Find best zones for this delivery type
-    const bestZone = cornerData.zones.reduce((best, zone) => {
-        if (!best || zone.successRate[recommendedDelivery.id.toLowerCase()] > 
-            best.successRate[recommendedDelivery.id.toLowerCase()]) {
-            return zone;
-        }
-        return best;
-    }, cornerData.zones[0]);
+    // Determine optimal ball trajectory
+    const ballTrajectory = determineBallTrajectory(pitchZone, bestTaker.foot || preferredFoot, 'corner');
     
-    // Find best targets for this zone
-    const zoneTargets = targetData.find(target => target.zone === bestZone.id);
-    const bestTargets = zoneTargets 
-        ? zoneTargets.bestTargets.map(id => getPlayerById(id)).filter(player => 
-            teamPlayers.some(tp => tp.id === player.id))
-        : [];
+    // Find or create a delivery type based on trajectory
+    const recommendedDelivery = cornerData.deliveryTypes.find(dt => 
+        dt.id.toLowerCase() === ballTrajectory.type.toLowerCase()
+    ) || {
+        id: ballTrajectory.type,
+        name: ballTrajectory.description
+    };
+    
+    // Get standard zones from the data
+    const bestZone = cornerData.zones.find(zone => 
+        zone.id === (ballTrajectory.type === 'inswinger' ? 'nearPost' : 'farPost')
+    ) || cornerData.zones[0];
     
     return {
         type: 'corner',
+        pitchZone,
         cornerType,
         taker: bestTaker,
+        alternateTaker: preferredFoot === 'left' ? bestRightFooted : bestLeftFooted,
         deliveryType: recommendedDelivery,
+        ballTrajectory,
         targetZone: bestZone,
-        targetPlayers: bestTargets.slice(0, 3) // Top 3 targets
+        targetPlayers: bestTargets,
+        analysis: `This is a ${cornerType} corner, best taken by a ${preferredFoot}-footed player for an ${ballTrajectory.type}. ${bestTaker.name} is the recommended taker.`
     };
 };
 
@@ -151,64 +347,74 @@ const generateCornerRecommendation = (teamId, coordinates, teamPlayers) => {
  * @param {Array} teamPlayers - Players from the selected team
  * @returns {Object} - Free kick recommendations
  */
-const generateFreeKickRecommendation = (teamId, coordinates, teamPlayers) => {
+const generateFreeKickRecommendation = async (teamId, coordinates, teamPlayers, pitchZone, bestLeftFooted, bestRightFooted) => {
     const freeKickZone = determineFreeKickZone(coordinates);
     const freeKickData = getFreeKickAnalysis();
-    const targetData = getTargetPlayers().freeKickTargets;
     
-    // Find if direct shot or cross is better for this zone
-    const isDirect = freeKickZone.successRate.direct > freeKickZone.successRate.crossed;
+    // Calculate distance from goal
+    const distanceFromGoal = Math.sqrt(Math.pow(coordinates.x - 50, 2) + Math.pow(coordinates.y - 5, 2));
+    const isCloseToBox = distanceFromGoal < 30;
     
-    // Find the appropriate delivery type
-    let recommendedDelivery;
-    if (isDirect) {
-        recommendedDelivery = freeKickData.deliveryTypes.find(dt => dt.id === 'direct');
+    // Determine if direct shot is recommended
+    const isDirect = (isCloseToBox && pitchZone === 'middle') || 
+                    (freeKickZone && freeKickZone.successRate && 
+                     freeKickZone.successRate.direct > freeKickZone.successRate.crossed);
+    
+    // Determine optimal foot preference for this position
+    const preferredFoot = pitchZone === 'left' ? 'right' : 
+                         pitchZone === 'right' ? 'left' : 
+                         isDirect ? 'right' : null; // Default to right foot for central direct kicks
+    
+    // Choose the proper taker based on position and kick type
+    let bestTaker, alternateTaker;
+    
+    if (preferredFoot === 'left') {
+        bestTaker = bestLeftFooted;
+        alternateTaker = bestRightFooted;
+    } else if (preferredFoot === 'right') {
+        bestTaker = bestRightFooted;
+        alternateTaker = bestLeftFooted;
     } else {
-        // For crosses, find the best crosser in the team
-        const bestCrosser = teamPlayers.reduce((best, player) => {
-            if (!best || player.crossingAbility > best.crossingAbility) {
-                return player;
-            }
-            return best;
-        }, null);
-        
-        // Find which delivery type the crosser is best at
-        const crossDeliveryTypes = freeKickData.deliveryTypes.filter(dt => 
-            dt.id !== 'direct' && dt.bestTakers.includes(bestCrosser.id)
+        // For middle positions, choose based on set piece ability
+        const sortedTakers = [bestLeftFooted, bestRightFooted].sort((a, b) => 
+            (b.setPieceSuccessRate.freeKicks || 0) - (a.setPieceSuccessRate.freeKicks || 0)
         );
-        
-        recommendedDelivery = crossDeliveryTypes.length > 0 
-            ? crossDeliveryTypes[0] 
-            : freeKickData.deliveryTypes.find(dt => dt.id === 'inSwinger');
+        bestTaker = sortedTakers[0];
+        alternateTaker = sortedTakers[1];
     }
     
-    // Find best taker for this delivery type
-    const bestTaker = teamPlayers.reduce((best, player) => {
-        if (recommendedDelivery.bestTakers.includes(player.id)) {
-            if (!best || player.setPieceSuccessRate.freeKicks > best.setPieceSuccessRate.freeKicks) {
-                return player;
-            }
-        }
-        return best;
-    }, teamPlayers[0]);
+    // Determine the ball trajectory
+    const ballTrajectory = determineBallTrajectory(
+        pitchZone, 
+        bestTaker.foot || preferredFoot || 'right', 
+        'freeKick'
+    );
     
-    // Find best targets for crosses (if not direct)
-    let bestTargets = [];
-    if (!isDirect) {
-        const zoneTargets = targetData.find(target => target.zone === freeKickZone.id);
-        bestTargets = zoneTargets && zoneTargets.bestTargets 
-            ? zoneTargets.bestTargets.map(id => getPlayerById(id)).filter(player => 
-                teamPlayers.some(tp => tp.id === player.id))
-            : [];
-    }
+    // Find or create a delivery type
+    const recommendedDelivery = freeKickData.deliveryTypes.find(dt => 
+        dt.id.toLowerCase() === ballTrajectory.type.toLowerCase()
+    ) || {
+        id: ballTrajectory.type,
+        name: ballTrajectory.description
+    };
     
+    // Find best targets for non-direct free kicks
+    const bestTargets = !isDirect ? findBestTargetPlayers(teamPlayers) : [];
+    
+    // Build comprehensive recommendation
     return {
         type: 'freeKick',
+        pitchZone,
         zone: freeKickZone,
         isDirect,
         taker: bestTaker,
+        alternateTaker,
         deliveryType: recommendedDelivery,
-        targetPlayers: bestTargets.slice(0, 3) // Top 3 targets
+        ballTrajectory,
+        targetPlayers: bestTargets,
+        analysis: isDirect ?
+            `This is a direct free kick from the ${pitchZone} zone. ${bestTaker.name} (${bestTaker.foot || 'preferred'}-footed) is the recommended taker.` :
+            `This is a crossing free kick from the ${pitchZone} zone. ${bestTaker.name} (${bestTaker.foot || 'preferred'}-footed) should deliver an ${ballTrajectory.type} ball for the target players.`
     };
 };
 
@@ -232,12 +438,28 @@ export const recommendSetPieceExecution = (team, setPieceType, position) => {
 
     const optimalPlayer = getOptimalPlayerForSetPiece(players, bestSetPiece);
     
+    // If it's a penalty, don't recommend target players
+    if (position.insideBox) {
+        return {
+            type: 'penalty',
+            player: optimalPlayer.name,
+            note: 'Direct penalty kick - no target players needed'
+        };
+    }
+    
+    const isCloseToBox = position.distanceToBox < 25;
+    const isPenalty = position.insideBox;
+    
     const recommendations = {
         player: optimalPlayer.name,
         trajectory: bestSetPiece.trajectory,
-        target: bestSetPiece.target,
-        directOrIndirect: position.distanceToBox < 20 ? 'Direct' : 'Indirect'
+        directOrIndirect: isCloseToBox ? 'Direct' : 'Indirect',
     };
+    
+    // Only add target for indirect free kicks and corners
+    if (!isCloseToBox && !isPenalty) {
+        recommendations.target = bestSetPiece.target;
+    }
 
     return recommendations;
 };
