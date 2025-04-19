@@ -1,6 +1,7 @@
 import config from '../config/config';
 import apiService from './apiService';
 import { setPieces } from '../data/setpieces';
+import { players as realPlayersData } from '../data/players'; // Import the real players data
 
 // In-memory cache for API data
 let teamsCache = [];
@@ -95,7 +96,21 @@ export const getTeamById = async (teamId) => {
 export const getPlayersByTeamId = async (teamId) => {
     if (!playersCache[teamId]) {
         try {
-            // First try to get the squad which has current players
+            // Use real player data from players.js file instead of API call
+            const teamPlayers = realPlayersData.filter(player => {
+                // Match players by team ID from squad array in teams.js
+                // or by matching the team name in player data
+                const squadIds = teamsCache.find(t => t.id === teamId)?.squad || [];
+                return squadIds.includes(player.id) || 
+                       (player.team && player.team.includes(teamsCache.find(t => t.id === teamId)?.name || ''));
+            });
+            
+            if (teamPlayers.length > 0) {
+                playersCache[teamId] = teamPlayers;
+                return teamPlayers;
+            }
+            
+            // Fallback to API if no matching players in real data
             let response = await apiService.players.getSquads(teamId);
             
             if (response.data && response.data.response && response.data.response.length > 0) {
