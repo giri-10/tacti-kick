@@ -40,21 +40,25 @@ const PitchVisualization = ({ onLocationSelect, recommendation, initialPosition 
             canvas.width = canvasSize.width;
             canvas.height = canvasSize.height;
             
-            // Draw the pitch with enhanced styling
+            // Draw the pitch with enhanced modern styling
             drawPitch(canvas, {
-                pitchColor: '#3e8e41',  // Richer green color
-                lineColor: 'rgba(255, 255, 255, 0.8)',
+                pitchColor: '#3e8e41',  // Rich green color
+                lineColor: 'rgba(255, 255, 255, 0.9)',
                 goalColor: 'rgba(255, 255, 255, 0.9)',
                 showPenaltyBoxes: true,
                 showCenterCircle: true,
-                showCornerArcs: true
+                showCornerArcs: true,
+                showPatternLines: true,
+                modernStyle: true,
+                glossEffect: true
             });
             
             // Draw temporary position indicator if mouse is over the canvas
             if (pointerPosition.x >= 0 && pointerPosition.y >= 0) {
                 drawSetPieceLocation(canvas, pointerPosition, { 
                     color: 'rgba(255, 152, 0, 0.6)',
-                    radius: 6
+                    radius: 6,
+                    glow: true
                 });
             }
             
@@ -62,7 +66,8 @@ const PitchVisualization = ({ onLocationSelect, recommendation, initialPosition 
             if (clickedPosition) {
                 drawSetPieceLocation(canvas, clickedPosition, { 
                     color: 'rgba(244, 67, 54, 0.8)',  // red
-                    radius: 8
+                    radius: 8,
+                    glow: true
                 });
             }
             
@@ -83,6 +88,7 @@ const PitchVisualization = ({ onLocationSelect, recommendation, initialPosition 
                             position: positionToUse
                         };
                         
+                        // Visualize with enhanced graphics
                         visualizeRecommendation(canvas, enhancedRecommendation);
                     } else {
                         console.warn("No valid position available for visualization");
@@ -158,10 +164,11 @@ const PitchVisualization = ({ onLocationSelect, recommendation, initialPosition 
         
         console.log("Visualizing recommendation with position:", position);
         
-        // Draw the set piece location
+        // Draw the set piece location with glow effect
         drawSetPieceLocation(canvas, position, { 
             color: '#f44336', // Red color for the set piece location
-            radius: 7 
+            radius: 7,
+            glow: true
         });
         
         // Check if taker is defined before using it
@@ -172,7 +179,11 @@ const PitchVisualization = ({ onLocationSelect, recommendation, initialPosition 
         
         if (type === 'corner') {
             // For corners, visualize the taker and trajectory to target zone
-            drawPlayer(canvas, position, taker, { color: '#2196F3' });
+            drawPlayer(canvas, position, taker, { 
+                color: '#2196F3',
+                showName: true,
+                playerStyle: 'modern'
+            });
             
             // Ensure targetZone exists
             if (!targetZone || !targetZone.id) {
@@ -204,12 +215,25 @@ const PitchVisualization = ({ onLocationSelect, recommendation, initialPosition 
             
             // Ensure deliveryType exists
             if (deliveryType && deliveryType.id) {
-                // Draw trajectory
+                // Draw enhanced trajectory with proper curve based on kick type
                 const trajectoryType = deliveryType.id.toLowerCase();
-                drawTrajectory(canvas, position, targetPosition, trajectoryType, { color: '#FF9800' });
+                drawTrajectory(canvas, position, targetPosition, trajectoryType, { 
+                    color: '#FF9800',
+                    width: 2.5,
+                    gradient: true,
+                    shadow: true,
+                    arrow: true,
+                    flightPath: true
+                });
             } else {
                 // Fallback to a default trajectory
-                drawTrajectory(canvas, position, targetPosition, 'inswinger', { color: '#FF9800' });
+                drawTrajectory(canvas, position, targetPosition, 'inswinger', { 
+                    color: '#FF9800',
+                    width: 2.5,
+                    gradient: true,
+                    shadow: true,
+                    arrow: true
+                });
             }
             
             // Draw target players if they exist
@@ -224,19 +248,34 @@ const PitchVisualization = ({ onLocationSelect, recommendation, initialPosition 
                         y: targetPosition.y + offset * 3
                     };
                     
-                    drawPlayer(canvas, playerPos, player, { color: '#4CAF50' });
+                    drawPlayer(canvas, playerPos, player, { 
+                        color: '#4CAF50',
+                        showName: true,
+                        playerStyle: 'modern'
+                    });
                 });
             }
         } else if (type === 'freeKick') {
             // For free kicks, visualize the taker and trajectory
-            const { zone, isDirect } = recommendation;
+            const { zone, isDirect, ballTrajectory } = recommendation;
             
-            // Draw the taker
-            drawPlayer(canvas, position, taker, { color: '#2196F3' });
+            // Draw the taker with modern styling
+            drawPlayer(canvas, position, taker, { 
+                color: '#2196F3',
+                showName: true,
+                playerStyle: 'modern'
+            });
             
             if (isDirect) {
-                // Direct free kick - draw trajectory to goal
-                drawTrajectory(canvas, position, { x: 50, y: 5 }, 'curved', { color: '#FF9800' });
+                // Direct free kick - draw trajectory to goal with curved path
+                drawTrajectory(canvas, position, { x: 50, y: 5 }, 'curved', { 
+                    color: '#FF9800',
+                    width: 2.5,
+                    gradient: true,
+                    shadow: true,
+                    arrow: true,
+                    flightPath: true
+                });
             } else {
                 // Crossed free kick - draw trajectory to target area
                 // Determine target position based on free kick position
@@ -245,11 +284,26 @@ const PitchVisualization = ({ onLocationSelect, recommendation, initialPosition 
                     ? { x: 60, y: 15 }
                     : { x: 40, y: 15 };
                 
-                // Draw trajectory
-                const trajectoryType = deliveryType && deliveryType.id && deliveryType.id.toLowerCase().includes('in') 
-                    ? 'inswinger' 
-                    : 'outswinger';
-                drawTrajectory(canvas, position, targetPosition, trajectoryType, { color: '#FF9800' });
+                // Determine trajectory type based on delivery type or ball trajectory
+                let trajectoryType = 'outswinger';
+                
+                if (deliveryType && deliveryType.id) {
+                    trajectoryType = deliveryType.id.toLowerCase().includes('in') 
+                        ? 'inswinger' 
+                        : 'outswinger';
+                } else if (ballTrajectory && ballTrajectory.type) {
+                    trajectoryType = ballTrajectory.type.toLowerCase();
+                }
+                
+                // Draw enhanced trajectory with proper curve based on side of pitch
+                drawTrajectory(canvas, position, targetPosition, trajectoryType, { 
+                    color: '#FF9800',
+                    width: 2.5,
+                    gradient: true,
+                    shadow: true,
+                    arrow: true,
+                    flightPath: true
+                });
                 
                 // Draw target players if they exist
                 if (Array.isArray(targetPlayers) && targetPlayers.length > 0) {
@@ -263,21 +317,37 @@ const PitchVisualization = ({ onLocationSelect, recommendation, initialPosition 
                             y: targetPosition.y + offset * 3
                         };
                         
-                        drawPlayer(canvas, playerPos, player, { color: '#4CAF50' });
+                        drawPlayer(canvas, playerPos, player, { 
+                            color: '#4CAF50',
+                            showName: true,
+                            playerStyle: 'modern'
+                        });
                     });
                 }
             }
         } else if (type === 'penalty') {
-            // Draw the taker
-            drawPlayer(canvas, { x: position.x, y: position.y + 5 }, taker, { color: '#2196F3' });
+            // Draw the taker with enhanced styling
+            drawPlayer(canvas, { x: position.x, y: position.y + 5 }, taker, { 
+                color: '#2196F3',
+                showName: true,
+                playerStyle: 'modern'
+            });
             
-            // Draw trajectory to goal
+            // Draw trajectory to goal with straight arrow
             drawTrajectory(
                 canvas, 
                 { x: position.x, y: position.y + 5 }, 
                 { x: 50, y: 5 }, 
                 'straight', 
-                { color: '#FF9800' }
+                { 
+                    color: '#FF9800',
+                    width: 3,
+                    gradient: true,
+                    shadow: true,
+                    arrow: true,
+                    arrowSize: 10,
+                    flightPath: true
+                }
             );
         }
     };
@@ -296,7 +366,7 @@ const PitchVisualization = ({ onLocationSelect, recommendation, initialPosition 
                     onClick={handleCanvasClick}
                     onMouseMove={handleCanvasMouseMove}
                     onMouseLeave={handleCanvasMouseLeave}
-                    style={{ cursor: 'pointer' }} // Add pointer cursor to indicate clickable area
+                    style={{ cursor: 'pointer', borderRadius: '4px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}
                 />
                 {!recommendation && (
                     <div className="pitch-instructions">
