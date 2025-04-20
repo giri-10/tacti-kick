@@ -1,10 +1,19 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { drawPitch, drawSetPieceLocation, drawTrajectory, drawPlayer } from '../utils/visualization';
 
-const PitchVisualization = ({ onLocationSelect, recommendation }) => {
+const PitchVisualization = ({ onLocationSelect, recommendation, initialPosition }) => {
     const canvasRef = useRef(null);
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
     const [pointerPosition, setPointerPosition] = useState({ x: -1, y: -1 });
+    const [clickedPosition, setClickedPosition] = useState(initialPosition);
+    
+    // Update clickedPosition when initialPosition changes from parent
+    useEffect(() => {
+        if (initialPosition) {
+            setClickedPosition(initialPosition);
+            console.log("Updated clicked position from initialPosition:", initialPosition);
+        }
+    }, [initialPosition]);
     
     useEffect(() => {
         const handleResize = () => {
@@ -41,11 +50,6 @@ const PitchVisualization = ({ onLocationSelect, recommendation }) => {
                 showCornerArcs: true
             });
             
-            // If we have a recommendation, visualize it
-            if (recommendation) {
-                visualizeRecommendation(canvas, recommendation);
-            }
-            
             // Draw temporary position indicator if mouse is over the canvas
             if (pointerPosition.x >= 0 && pointerPosition.y >= 0) {
                 drawSetPieceLocation(canvas, pointerPosition, { 
@@ -53,23 +57,76 @@ const PitchVisualization = ({ onLocationSelect, recommendation }) => {
                     radius: 6
                 });
             }
+            
+            // Draw the clicked position marker if it exists
+            if (clickedPosition) {
+                drawSetPieceLocation(canvas, clickedPosition, { 
+                    color: 'rgba(244, 67, 54, 0.8)',  // red
+                    radius: 8
+                });
+            }
+            
+            // If we have a recommendation, visualize it
+            if (recommendation) {
+                console.log("Attempting to visualize recommendation:", recommendation);
+                
+                try {
+                    // Determine which position to use for visualization
+                    const positionToUse = recommendation.position || clickedPosition;
+                    
+                    if (positionToUse) {
+                        console.log("Using position for visualization:", positionToUse);
+                        
+                        // Make a copy of the recommendation with guaranteed position
+                        const enhancedRecommendation = {
+                            ...recommendation,
+                            position: positionToUse
+                        };
+                        
+                        visualizeRecommendation(canvas, enhancedRecommendation);
+                    } else {
+                        console.warn("No valid position available for visualization");
+                    }
+                } catch (error) {
+                    console.error("Error visualizing recommendation:", error);
+                }
+            }
         }
-    }, [canvasSize, pointerPosition, recommendation]);
+    }, [canvasSize, pointerPosition, recommendation, clickedPosition]);
     
     const handleCanvasClick = (e) => {
         const canvas = canvasRef.current;
+        if (!canvas) return;
+        
         const rect = canvas.getBoundingClientRect();
         
         // Calculate position as percentage of canvas size (0-100 scale)
         const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
         const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
         
+        // Create position object with numerical coordinates
+        const position = { 
+            x: parseFloat(x.toFixed(2)), 
+            y: parseFloat(y.toFixed(2))
+        };
+        
+        console.log("Canvas clicked at position:", position);
+        
+        // Store the clicked position for visualization and backup
+        setClickedPosition(position);
+        
         // Pass the coordinates to the parent component
-        onLocationSelect({ x, y });
+        if (typeof onLocationSelect === 'function') {
+            onLocationSelect(position);
+        } else {
+            console.error("onLocationSelect is not a function");
+        }
     };
     
     const handleCanvasMouseMove = (e) => {
         const canvas = canvasRef.current;
+        if (!canvas) return;
+        
         const rect = canvas.getBoundingClientRect();
         
         // Calculate position as percentage of canvas size (0-100 scale)
@@ -85,7 +142,21 @@ const PitchVisualization = ({ onLocationSelect, recommendation }) => {
     
     // Function to visualize the set piece recommendation
     const visualizeRecommendation = (canvas, recommendation) => {
+        // Safety check - ensure all needed properties exist
+        if (!recommendation || !recommendation.type) {
+            console.warn("Missing recommendation or type");
+            return;
+        }
+        
         const { type, position, taker, targetPlayers = [], targetZone, deliveryType } = recommendation;
+        
+        // Check if position is defined before using it
+        if (!position || typeof position.x !== 'number' || typeof position.y !== 'number') {
+            console.warn('Recommendation is missing valid position coordinates:', position);
+            return;
+        }
+        
+        console.log("Visualizing recommendation with position:", position);
         
         // Draw the set piece location
         drawSetPieceLocation(canvas, position, { 
@@ -93,9 +164,21 @@ const PitchVisualization = ({ onLocationSelect, recommendation }) => {
             radius: 7 
         });
         
+        // Check if taker is defined before using it
+        if (!taker) {
+            console.warn('Recommendation is missing taker information');
+            return;
+        }
+        
         if (type === 'corner') {
             // For corners, visualize the taker and trajectory to target zone
             drawPlayer(canvas, position, taker, { color: '#2196F3' });
+            
+            // Ensure targetZone exists
+            if (!targetZone || !targetZone.id) {
+                console.warn('Corner recommendation is missing target zone');
+                return;
+            }
             
             // Determine target position based on zone
             let targetPosition;
@@ -119,24 +202,34 @@ const PitchVisualization = ({ onLocationSelect, recommendation }) => {
                     targetPosition = { x: 50, y: 15 };
             }
             
-            // Draw trajectory
-            const trajectoryType = deliveryType.id.toLowerCase();
-            drawTrajectory(canvas, position, targetPosition, trajectoryType, { color: '#FF9800' });
+            // Ensure deliveryType exists
+            if (deliveryType && deliveryType.id) {
+                // Draw trajectory
+                const trajectoryType = deliveryType.id.toLowerCase();
+                drawTrajectory(canvas, position, targetPosition, trajectoryType, { color: '#FF9800' });
+            } else {
+                // Fallback to a default trajectory
+                drawTrajectory(canvas, position, targetPosition, 'inswinger', { color: '#FF9800' });
+            }
             
-            // Draw target players
-            targetPlayers.forEach((player, index) => {
-                // Spread target players around the target position
-                const offset = index - (targetPlayers.length - 1) / 2;
-                const playerPos = {
-                    x: targetPosition.x + offset * 5,
-                    y: targetPosition.y + offset * 3
-                };
-                
-                drawPlayer(canvas, playerPos, player, { color: '#4CAF50' });
-            });
+            // Draw target players if they exist
+            if (Array.isArray(targetPlayers) && targetPlayers.length > 0) {
+                targetPlayers.forEach((player, index) => {
+                    if (!player) return; // Skip if player is undefined
+                    
+                    // Spread target players around the target position
+                    const offset = index - (targetPlayers.length - 1) / 2;
+                    const playerPos = {
+                        x: targetPosition.x + offset * 5,
+                        y: targetPosition.y + offset * 3
+                    };
+                    
+                    drawPlayer(canvas, playerPos, player, { color: '#4CAF50' });
+                });
+            }
         } else if (type === 'freeKick') {
             // For free kicks, visualize the taker and trajectory
-            const { zone, isDirect, targetPlayers } = recommendation;
+            const { zone, isDirect } = recommendation;
             
             // Draw the taker
             drawPlayer(canvas, position, taker, { color: '#2196F3' });
@@ -153,20 +246,26 @@ const PitchVisualization = ({ onLocationSelect, recommendation }) => {
                     : { x: 40, y: 15 };
                 
                 // Draw trajectory
-                const trajectoryType = deliveryType.id.toLowerCase().includes('in') ? 'inswinger' : 'outswinger';
+                const trajectoryType = deliveryType && deliveryType.id && deliveryType.id.toLowerCase().includes('in') 
+                    ? 'inswinger' 
+                    : 'outswinger';
                 drawTrajectory(canvas, position, targetPosition, trajectoryType, { color: '#FF9800' });
                 
-                // Draw target players
-                targetPlayers.forEach((player, index) => {
-                    // Spread target players around the target position
-                    const offset = index - (targetPlayers.length - 1) / 2;
-                    const playerPos = {
-                        x: targetPosition.x + offset * 5,
-                        y: targetPosition.y + offset * 3
-                    };
-                    
-                    drawPlayer(canvas, playerPos, player, { color: '#4CAF50' });
-                });
+                // Draw target players if they exist
+                if (Array.isArray(targetPlayers) && targetPlayers.length > 0) {
+                    targetPlayers.forEach((player, index) => {
+                        if (!player) return; // Skip if player is undefined
+                        
+                        // Spread target players around the target position
+                        const offset = index - (targetPlayers.length - 1) / 2;
+                        const playerPos = {
+                            x: targetPosition.x + offset * 5,
+                            y: targetPosition.y + offset * 3
+                        };
+                        
+                        drawPlayer(canvas, playerPos, player, { color: '#4CAF50' });
+                    });
+                }
             }
         } else if (type === 'penalty') {
             // Draw the taker
@@ -197,6 +296,7 @@ const PitchVisualization = ({ onLocationSelect, recommendation }) => {
                     onClick={handleCanvasClick}
                     onMouseMove={handleCanvasMouseMove}
                     onMouseLeave={handleCanvasMouseLeave}
+                    style={{ cursor: 'pointer' }} // Add pointer cursor to indicate clickable area
                 />
                 {!recommendation && (
                     <div className="pitch-instructions">

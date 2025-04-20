@@ -171,21 +171,47 @@ export const findBestSetPieceTakers = (teamPlayers) => {
  * @returns {Object} - Set piece recommendations
  */
 export const generateRecommendation = async (teamId, coordinates) => {
+    console.log("generateRecommendation called with:", { teamId, coordinates });
+    
+    // Add safety check for coordinates
+    if (!coordinates || typeof coordinates.x !== 'number' || typeof coordinates.y !== 'number') {
+        console.error("Invalid coordinates received:", coordinates);
+        throw new Error("Invalid coordinates - must have x and y numeric values");
+    }
+    
     const setPieceType = determineSetPieceType(coordinates);
+    console.log("Set piece type determined:", setPieceType);
+    
     const teamPlayers = await getPlayersByTeamId(teamId);
     const pitchZone = determinePitchZone(coordinates);
+    console.log("Pitch zone determined:", pitchZone);
+    
     const optimalFoot = determineOptimalFoot(coordinates);
+    console.log("Optimal foot determined:", optimalFoot);
     
     // Find the team's best set piece takers based on foot
     const { bestLeftFooted, bestRightFooted } = findBestSetPieceTakers(teamPlayers);
+    console.log("Best takers found:", { 
+        leftFooted: bestLeftFooted?.name, 
+        rightFooted: bestRightFooted?.name 
+    });
     
+    let recommendation;
     if (setPieceType === 'corner') {
-        return generateCornerRecommendation(teamId, coordinates, teamPlayers, pitchZone, bestLeftFooted, bestRightFooted);
+        recommendation = generateCornerRecommendation(teamId, coordinates, teamPlayers, pitchZone, bestLeftFooted, bestRightFooted);
     } else if (setPieceType === 'penalty') {
-        return generatePenaltyRecommendation(teamId, coordinates, teamPlayers, pitchZone);
+        recommendation = generatePenaltyRecommendation(teamId, coordinates, teamPlayers, pitchZone);
     } else {
-        return generateFreeKickRecommendation(teamId, coordinates, teamPlayers, pitchZone, bestLeftFooted, bestRightFooted);
+        recommendation = generateFreeKickRecommendation(teamId, coordinates, teamPlayers, pitchZone, bestLeftFooted, bestRightFooted);
     }
+    
+    // Ensure position is attached to the recommendation
+    if (recommendation) {
+        recommendation.position = { ...coordinates };
+        console.log("Final recommendation position:", recommendation.position);
+    }
+    
+    return recommendation;
 };
 
 /**

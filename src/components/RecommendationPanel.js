@@ -1,6 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const RecommendationPanel = ({ recommendation }) => {
+    useEffect(() => {
+        if (recommendation) {
+            console.log("Recommendation in panel:", recommendation);
+            console.log("Position data:", recommendation.position);
+        }
+    }, [recommendation]);
+
     if (!recommendation) {
         return (
             <div className="card">

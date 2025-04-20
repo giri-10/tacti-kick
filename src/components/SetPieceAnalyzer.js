@@ -10,13 +10,19 @@ const SetPieceAnalyzer = () => {
     const [recommendation, setRecommendation] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [lastClickedPosition, setLastClickedPosition] = useState(null);
     
     const handleTeamSelect = (teamId) => {
+        console.log("Team selected:", teamId);
         setSelectedTeam(teamId);
         setRecommendation(null); // Clear previous recommendations when team changes
     };
     
     const handleLocationSelect = async (coordinates) => {
+        console.log("Location selected in SetPieceAnalyzer:", coordinates);
+        // Store position for later use
+        setLastClickedPosition(coordinates);
+        
         if (!selectedTeam) {
             setError("Please select a team first");
             return;
@@ -26,8 +32,17 @@ const SetPieceAnalyzer = () => {
         setError(null);
         
         try {
-            const recommendation = await generateRecommendation(selectedTeam, coordinates);
-            setRecommendation(recommendation);
+            console.log("Generating recommendation for team:", selectedTeam, "at position:", coordinates);
+            const recommendationData = await generateRecommendation(selectedTeam, coordinates);
+            
+            // Ensure position is attached to the recommendation object
+            const enhancedRecommendation = {
+                ...recommendationData,
+                position: coordinates // Explicitly attach the position here
+            };
+            
+            console.log("Recommendation received with position:", enhancedRecommendation);
+            setRecommendation(enhancedRecommendation);
             setLoading(false);
         } catch (error) {
             console.error("Error generating recommendation:", error);
@@ -71,6 +86,7 @@ const SetPieceAnalyzer = () => {
                             <PitchVisualization 
                                 onLocationSelect={handleLocationSelect}
                                 recommendation={recommendation}
+                                initialPosition={lastClickedPosition}
                             />
                             
                             <RecommendationPanel recommendation={recommendation} />

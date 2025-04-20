@@ -137,6 +137,12 @@ export const drawPitch = (canvas, options = {}) => {
  * @param {Object} options - Customization options
  */
 export const drawSetPieceLocation = (canvas, coordinates, options = {}) => {
+    // Safety check - make sure canvas and coordinates are defined
+    if (!canvas || !coordinates || typeof coordinates.x !== 'number' || typeof coordinates.y !== 'number') {
+        console.warn('Invalid canvas or coordinates for drawSetPieceLocation', { canvas, coordinates });
+        return;
+    }
+    
     const ctx = canvas.getContext('2d');
     const width = canvas.width;
     const height = canvas.height;
