@@ -245,11 +245,15 @@ const generatePenaltyRecommendation = async (teamId, coordinates, teamPlayers, p
 /**
  * Find best target players for set pieces
  * @param {Array} teamPlayers - Array of team players
+ * @param {Object} taker - The player taking the set piece who should be excluded from targets
  * @returns {Array} - Array of best target players (usually tall and good at scoring)
  */
-const findBestTargetPlayers = (teamPlayers) => {
+const findBestTargetPlayers = (teamPlayers, taker) => {
+    // Filter out the set piece taker from potential targets
+    const eligibleTargets = taker ? teamPlayers.filter(player => player.id !== taker.id) : teamPlayers;
+    
     // Create a scoring formula for each player as a target
-    const playersWithTargetScore = teamPlayers.map(player => {
+    const playersWithTargetScore = eligibleTargets.map(player => {
         // Height and goals are the most important factors
         const heightScore = (player.height - 170) * 2; // Taller is better
         const goalScore = player.goalsFromSetPieces * 10; // More goals is better
@@ -334,7 +338,8 @@ const generateCornerRecommendation = async (teamId, coordinates, teamPlayers, pi
     const bestTaker = preferredFoot === 'left' ? bestLeftFooted : bestRightFooted;
     
     // Find best target players (tall, good at headers)
-    const bestTargets = findBestTargetPlayers(teamPlayers);
+    // Pass the taker to exclude them from the target list
+    const bestTargets = findBestTargetPlayers(teamPlayers, bestTaker);
     
     // Determine optimal ball trajectory
     const ballTrajectory = determineBallTrajectory(pitchZone, bestTaker.foot || preferredFoot, 'corner');
@@ -425,7 +430,8 @@ const generateFreeKickRecommendation = async (teamId, coordinates, teamPlayers, 
     };
     
     // Find best targets for non-direct free kicks
-    const bestTargets = !isDirect ? findBestTargetPlayers(teamPlayers) : [];
+    // Pass the taker to exclude them from the target list
+    const bestTargets = !isDirect ? findBestTargetPlayers(teamPlayers, bestTaker) : [];
     
     // Build comprehensive recommendation
     return {
