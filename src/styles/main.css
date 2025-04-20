@@ -1,4 +1,21 @@
-/* Reset and base styles */
+/* Modern Minimalist Design for Tacti-Kick */
+:root {
+  --primary-color: #2563eb;
+  --secondary-color: #1e40af;
+  --accent-color: #f59e0b;
+  --success-color: #10b981;
+  --error-color: #ef4444;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-light: #9ca3af;
+  --background-light: #ffffff;
+  --background-medium: #f9fafb;
+  --background-dark: #f3f4f6;
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --border-radius: 8px;
+  --transition: all 0.3s ease;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,21 +23,170 @@
 }
 
 body {
-  font-family: 'Arial', sans-serif;
-  line-height: 1.6;
-  color: #333;
-  background-color: #f8f9fa;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--background-medium);
 }
 
-.App {
-  max-width: 1800px;
+.container {
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 1.5rem;
 }
 
-h1, h2, h3, h4, h5, h6 {
+.app-header {
+  background-color: var(--background-light);
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.app-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.app-title h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  letter-spacing: -0.025em;
+}
+
+.logo {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.app-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .app-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background-color: var(--background-light);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--card-shadow);
+  transition: var(--transition);
+  margin-bottom: 1.5rem;
+}
+
+.card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title i {
+  color: var(--primary-color);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--secondary-color);
+}
+
+.btn-secondary {
+  background-color: var(--background-dark);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--background-medium);
+}
+
+.btn-accent {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.btn-success {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
 }
 
 /* Set Piece Analyzer Layout */
@@ -35,13 +201,13 @@ h1, h2, h3, h4, h5, h6 {
   text-align: center;
   padding: 1rem 0;
   margin-bottom: 1.5rem;
-  background-color: #f0f4f8;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--background-light);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
 }
 
 .analyzer-header h2 {
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 2rem;
   margin-bottom: 0.5rem;
 }
@@ -67,9 +233,9 @@ h1, h2, h3, h4, h5, h6 {
 .team-selector,
 .player-stats-panel,
 .recommendation-panel {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: var(--background-light);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
   margin-bottom: 20px;
   padding: 20px;
 }
@@ -79,14 +245,14 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   min-height: 150px;
-  color: #6c757d;
+  color: var(--text-light);
   text-align: center;
   font-style: italic;
 }
 
 /* Team Selector styles */
 .team-selector h3 {
-  color: #2c3e50;
+  color: var(--text-primary);
   margin-bottom: 15px;
 }
 
@@ -115,7 +281,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .stat-group h5 {
-  color: #495057;
+  color: var(--text-secondary);
   border-bottom: 1px solid #e9ecef;
   padding-bottom: 5px;
   margin-bottom: 10px;
@@ -132,9 +298,9 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   width: 100%;
   height: 70vh;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: var(--background-light);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
   overflow: hidden;
 }
 
@@ -150,7 +316,7 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   right: 0;
   text-align: center;
-  color: #6c757d;
+  color: var(--text-light);
   font-style: italic;
   background-color: rgba(255, 255, 255, 0.8);
   padding: 5px;
@@ -158,7 +324,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Recommendation Panel */
 .recommendation-panel h3 {
-  color: #2c3e50;
+  color: var(--text-primary);
   margin-bottom: 15px;
 }
 
@@ -173,12 +339,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .recommendation-section h5 {
-  color: #495057;
+  color: var(--text-secondary);
   margin-bottom: 10px;
 }
 
 .player-card {
-  background-color: #f8f9fa;
+  background-color: var(--background-dark);
   border-radius: 4px;
   padding: 12px;
   margin-bottom: 10px;
@@ -208,7 +374,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .delivery-type {
-  background-color: #f8f9fa;
+  background-color: var(--background-dark);
   border-radius: 4px;
   padding: 12px;
 }
@@ -220,11 +386,11 @@ h1, h2, h3, h4, h5, h6 {
 
 .delivery-description {
   font-size: 0.9rem;
-  color: #6c757d;
+  color: var(--text-light);
 }
 
 .target-zone {
-  background-color: #f8f9fa;
+  background-color: var(--background-dark);
   border-radius: 4px;
   padding: 12px;
 }
@@ -258,7 +424,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .zone-info {
   font-size: 0.9rem;
-  color: #6c757d;
+  color: var(--text-light);
 }
 
 .success-rates {
@@ -269,7 +435,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .success-rate {
   flex: 0 0 calc(50% - 7.5px);
-  background-color: #f8f9fa;
+  background-color: var(--background-dark);
   padding: 8px 12px;
   border-radius: 4px;
   display: flex;
@@ -278,7 +444,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Player Stats Panel */
 .player-stats-panel h3 {
-  color: #2c3e50;
+  color: var(--text-primary);
   margin-bottom: 15px;
 }
 
@@ -295,8 +461,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .tab.active {
-  border-bottom-color: #007bff;
-  color: #007bff;
+  border-bottom-color: var(--primary-color);
+  color: var(--primary-color);
   font-weight: bold;
 }
 
@@ -306,7 +472,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .player-stat-card {
-  background-color: white;
+  background-color: var(--background-light);
   border: 1px solid #dee2e6;
   border-radius: 4px;
   padding: 15px;
@@ -320,7 +486,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .player-position {
   font-size: 0.9rem;
-  color: #6c757d;
+  color: var(--text-light);
 }
 
 .player-attributes {
@@ -332,14 +498,14 @@ h1, h2, h3, h4, h5, h6 {
 
 .attribute {
   flex: 0 0 calc(50% - 5px);
-  background-color: #f8f9fa;
+  background-color: var(--background-dark);
   padding: 8px;
   border-radius: 4px;
 }
 
 .attribute-label {
   font-size: 0.8rem;
-  color: #6c757d;
+  color: var(--text-light);
 }
 
 .attribute-value {
@@ -361,14 +527,14 @@ h1, h2, h3, h4, h5, h6 {
 
 .stat-label {
   font-size: 0.8rem;
-  color: #495057;
+  color: var(--text-secondary);
   margin-bottom: 5px;
 }
 
 .stat-value {
   font-size: 1.2rem;
   font-weight: bold;
-  color: #007bff;
+  color: var(--primary-color);
 }
 
 /* Responsive adjustments */

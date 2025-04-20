@@ -3,282 +3,148 @@ import React from 'react';
 const RecommendationPanel = ({ recommendation }) => {
     if (!recommendation) {
         return (
-            <div className="recommendation-panel empty-panel">
-                <p>Click on the pitch to get set piece recommendations</p>
+            <div className="card">
+                <div className="card-header">
+                    <h3 className="card-title">
+                        <i className="fas fa-lightbulb"></i> Recommendations
+                    </h3>
+                </div>
+                <div className="empty-panel p-4">
+                    <p>Select a location on the pitch to get set piece recommendations</p>
+                </div>
             </div>
         );
     }
     
-    const { type, pitchZone } = recommendation;
+    const { type, taker, alternateTaker, deliveryType, targetPlayers = [], targetZone, zone, analysis } = recommendation;
     
     return (
-        <div className="recommendation-panel">
-            <h3>Set Piece Recommendation</h3>
+        <div className="card">
+            <div className="card-header">
+                <h3 className="card-title">
+                    <i className="fas fa-lightbulb"></i> Set Piece Strategy
+                </h3>
+            </div>
             
-            <div className="pitch-position">
-                <h4>Pitch Position: {pitchZone || 'Unknown'}</h4>
-                {recommendation.analysis && (
-                    <div className="recommendation-analysis">
-                        {recommendation.analysis}
+            <div className="p-4">
+                <div className="recommendation-header">
+                    <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-lg">
+                            {type === 'corner' ? 'Corner Kick' : 
+                             type === 'freeKick' && recommendation.isDirect ? 'Direct Free Kick' :
+                             type === 'freeKick' ? 'Indirect Free Kick' : 'Penalty Kick'}
+                        </h4>
+                        <span className="badge bg-primary text-white px-2 py-1 rounded-full text-xs">
+                            {zone && zone.name ? zone.name : 
+                            targetZone && targetZone.name ? targetZone.name : ''}
+                        </span>
                     </div>
-                )}
-            </div>
-            
-            {type === 'corner' ? (
-                <CornerRecommendation recommendation={recommendation} />
-            ) : type === 'penalty' ? (
-                <PenaltyRecommendation recommendation={recommendation} />
-            ) : (
-                <FreeKickRecommendation recommendation={recommendation} />
-            )}
-        </div>
-    );
-};
-
-// Add new component for penalties
-const PenaltyRecommendation = ({ recommendation }) => {
-    const { taker, note } = recommendation;
-    
-    return (
-        <div className="penalty-recommendation">
-            <div className="recommendation-header">
-                <h4>Penalty Kick</h4>
-            </div>
-            
-            <div className="recommendation-section">
-                <h5>Recommended Taker</h5>
-                <div className="player-card">
-                    <div className="player-name">{taker.name}</div>
-                    <div className="player-position">{taker.position}</div>
-                    <div className="player-stats">
-                        <div className="player-stat">
-                            <span>Penalty Success Rate:</span>
-                            <span>{taker.penaltySuccessRate || "85"}%</span>
-                        </div>
-                        <div className="player-stat">
-                            <span>Foot Preference:</span>
-                            <span>{taker.foot || 'Not Specified'}</span>
-                        </div>
-                    </div>
+                    <p className="text-gray-600 text-sm mb-2">{analysis}</p>
                 </div>
-            </div>
-            
-            <div className="recommendation-section">
-                <h5>Note</h5>
-                <div className="approach">Direct Penalty Kick</div>
-                <div className="zone-info">
-                    <div>{note || 'Execute penalty with confidence and precision'}</div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const CornerRecommendation = ({ recommendation }) => {
-    const { taker, alternateTaker, deliveryType, targetZone, targetPlayers, cornerType, ballTrajectory } = recommendation;
-    
-    return (
-        <div className="corner-recommendation">
-            <div className="recommendation-header">
-                <h4>{cornerType === 'left' ? 'Left' : 'Right'} Corner Kick</h4>
-            </div>
-            
-            <div className="recommendation-section">
-                <h5>Recommended Taker</h5>
-                <div className="player-card">
-                    <div className="player-name">{taker.name}</div>
-                    <div className="player-position">{taker.position}</div>
-                    <div className="player-stats">
-                        <div className="player-stat">
-                            <span>Crossing:</span>
-                            <span>{taker.crossingAbility}%</span>
-                        </div>
-                        <div className="player-stat">
-                            <span>Corner Success:</span>
-                            <span>{taker.setPieceSuccessRate.corners}%</span>
-                        </div>
-                        <div className="player-stat">
-                            <span>Foot Preference:</span>
-                            <span>{taker.foot || 'Not Specified'}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            {alternateTaker && (
+                
                 <div className="recommendation-section">
-                    <h5>Alternate Taker</h5>
-                    <div className="player-card alternate">
-                        <div className="player-name">{alternateTaker.name}</div>
-                        <div className="player-position">{alternateTaker.position}</div>
-                        <div className="player-stats">
+                    <h5>Primary Taker</h5>
+                    <div className="player-card">
+                        <div className="player-name">{taker.name}</div>
+                        <div className="player-position text-sm text-gray-600">{taker.position} • {taker.foot}-footed</div>
+                        <div className="player-stats mt-2">
                             <div className="player-stat">
-                                <span>Foot Preference:</span>
-                                <span>{alternateTaker.foot || 'Not Specified'}</span>
+                                <span>Corners:</span>
+                                <span className="font-semibold">{taker.setPieceSuccessRate.corners}%</span>
+                            </div>
+                            <div className="player-stat">
+                                <span>Free Kicks:</span>
+                                <span className="font-semibold">{taker.setPieceSuccessRate.freeKicks}%</span>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-            
-            <div className="recommendation-section">
-                <h5>Delivery Type</h5>
-                <div className="delivery-type">
-                    <div className="delivery-name">{ballTrajectory?.description || deliveryType.name}</div>
-                    <div className="delivery-description">
-                        {cornerType === 'left' ? 
-                            'From left corner flag, aiming toward goal area' : 
-                            'From right corner flag, aiming toward goal area'}
-                    </div>
-                </div>
-            </div>
-            
-            <div className="recommendation-section">
-                <h5>Target Zone</h5>
-                <div className="target-zone">
-                    <div className="zone-name">{targetZone.name}</div>
-                    <div className="zone-stats">
-                        <div className="zone-stat">
-                            <span>Success Rate:</span>
-                            <span>{typeof targetZone.successRate === 'object' ? 
-                                targetZone.successRate[ballTrajectory?.type.toLowerCase() || 'default']?.toFixed(1) + '%' : 
-                                'N/A'}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div className="recommendation-section">
-                <h5>Target Players</h5>
-                <div className="target-players">
-                    {targetPlayers.length > 0 ? (
-                        targetPlayers.map(player => (
-                            <div key={player.id} className="player-card small">
-                                <div className="player-name">{player.name}</div>
-                                <div className="player-position">{player.position}</div>
-                                <div className="player-stats">
-                                    <div className="player-stat">
-                                        <span>Height:</span>
-                                        <span>{player.height} cm</span>
-                                    </div>
-                                    <div className="player-stat">
-                                        <span>Goals from Set Pieces:</span>
-                                        <span>{player.goalsFromSetPieces}</span>
-                                    </div>
-                                </div>
+                    
+                    {alternateTaker && (
+                        <div className="mt-2">
+                            <h6 className="text-xs text-gray-500 uppercase mb-1">Alternate Taker</h6>
+                            <div className="player-card small">
+                                <div className="player-name text-sm">{alternateTaker.name}</div>
+                                <div className="text-xs text-gray-600">{alternateTaker.foot}-footed • {alternateTaker.setPieceSuccessRate.freeKicks}% success</div>
                             </div>
-                        ))
-                    ) : (
-                        <p>No specific target players for this team and zone.</p>
+                        </div>
                     )}
                 </div>
-            </div>
-        </div>
-    );
-};
-
-const FreeKickRecommendation = ({ recommendation }) => {
-    const { taker, alternateTaker, deliveryType, zone, isDirect, targetPlayers, ballTrajectory } = recommendation;
-    
-    return (
-        <div className="freekick-recommendation">
-            <div className="recommendation-header">
-                <h4>Free Kick - {zone?.name || 'Standard'}</h4>
-                <div className="approach-label">{isDirect ? 'Direct Shot' : 'Crossed Delivery'}</div>
-            </div>
-            
-            <div className="recommendation-section">
-                <h5>Recommended Taker</h5>
-                <div className="player-card">
-                    <div className="player-name">{taker.name}</div>
-                    <div className="player-position">{taker.position}</div>
-                    <div className="player-stats">
-                        <div className="player-stat">
-                            <span>Crossing:</span>
-                            <span>{taker.crossingAbility}%</span>
-                        </div>
-                        <div className="player-stat">
-                            <span>Free Kick Success:</span>
-                            <span>{taker.setPieceSuccessRate.freeKicks}%</span>
-                        </div>
-                        <div className="player-stat">
-                            <span>Foot Preference:</span>
-                            <span>{taker.foot || 'Not Specified'}</span>
+                
+                {deliveryType && (
+                    <div className="recommendation-section">
+                        <h5>Recommended Delivery</h5>
+                        <div className="delivery-type">
+                            <div className="delivery-name">{deliveryType.name}</div>
+                            <div className="delivery-description">{deliveryType.description}</div>
                         </div>
                     </div>
-                </div>
-            </div>
-            
-            {alternateTaker && (
-                <div className="recommendation-section">
-                    <h5>Alternate Taker</h5>
-                    <div className="player-card alternate">
-                        <div className="player-name">{alternateTaker.name}</div>
-                        <div className="player-position">{alternateTaker.position}</div>
-                        <div className="player-stats">
-                            <div className="player-stat">
-                                <span>Foot Preference:</span>
-                                <span>{alternateTaker.foot || 'Not Specified'}</span>
-                            </div>
-                            <div className="player-stat">
-                                <span>Free Kick Success:</span>
-                                <span>{alternateTaker.setPieceSuccessRate.freeKicks}%</span>
-                            </div>
+                )}
+                
+                {targetZone && (
+                    <div className="recommendation-section">
+                        <h5>Target Zone</h5>
+                        <div className="target-zone">
+                            <div className="zone-name">{targetZone.name}</div>
+                            {targetZone.successRate && (
+                                <div className="zone-stats mt-2">
+                                    {Object.entries(targetZone.successRate).map(([key, value]) => (
+                                        <div className="zone-stat" key={key}>
+                                            <span>{key.replace(/([A-Z])/g, ' $1').replace(/^\w/, c => c.toUpperCase())}:</span>
+                                            <span className="font-semibold">{value}%</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            
+                            {targetZone.bestFor && (
+                                <div className="zone-info mt-2 text-sm">
+                                    Best for players {targetZone.bestFor.heightUnder180cm && <span>under 180cm: {targetZone.bestFor.heightUnder180cm}, </span>}
+                                    {targetZone.bestFor.heightOver180cm && <span>over 180cm: {targetZone.bestFor.heightOver180cm}</span>}
+                                </div>
+                            )}
                         </div>
                     </div>
-                </div>
-            )}
-            
-            <div className="recommendation-section">
-                <h5>Delivery Type</h5>
-                <div className="delivery-type">
-                    <div className="delivery-name">{ballTrajectory?.description || deliveryType.name}</div>
-                </div>
-            </div>
-            
-            {zone && zone.successRate && (
-                <div className="recommendation-section">
-                    <h5>Success Rates</h5>
-                    <div className="success-rates">
-                        {typeof zone.successRate.direct !== 'undefined' && (
-                            <div className="success-rate">
-                                <span>Direct:</span>
-                                <span>{zone.successRate.direct.toFixed(1)}%</span>
-                            </div>
-                        )}
-                        {typeof zone.successRate.crossed !== 'undefined' && (
-                            <div className="success-rate">
-                                <span>Crossed:</span>
-                                <span>{zone.successRate.crossed.toFixed(1)}%</span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-            
-            {!isDirect && targetPlayers && targetPlayers.length > 0 && (
-                <div className="recommendation-section">
-                    <h5>Target Players</h5>
-                    <div className="target-players">
-                        {targetPlayers.map(player => (
-                            <div key={player.id} className="player-card small">
+                )}
+                
+                {targetPlayers && targetPlayers.length > 0 && (
+                    <div className="recommendation-section">
+                        <h5>Target Players</h5>
+                        {targetPlayers.map((player, index) => (
+                            <div className="player-card small mb-2" key={`target-${index}`}>
                                 <div className="player-name">{player.name}</div>
-                                <div className="player-position">{player.position}</div>
-                                <div className="player-stats">
-                                    <div className="player-stat">
-                                        <span>Height:</span>
-                                        <span>{player.height} cm</span>
-                                    </div>
-                                    <div className="player-stat">
-                                        <span>Goals from Set Pieces:</span>
-                                        <span>{player.goalsFromSetPieces}</span>
-                                    </div>
+                                <div className="text-xs text-gray-600 mb-1">
+                                    {player.position} • {player.height}cm
+                                </div>
+                                <div className="flex justify-between text-xs">
+                                    <span>Goals from set pieces: <strong>{player.goalsFromSetPieces}</strong></span>
                                 </div>
                             </div>
                         ))}
                     </div>
+                )}
+                
+                <div className="recommendation-section mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between">
+                        <h5>Expected Success Rate</h5>
+                        <div className="badge bg-success text-white px-2 py-1 rounded-full text-xs">
+                            {zone && zone.successRate ? 
+                              `${zone.successRate.direct || zone.successRate.crossed || zone.successRate.inSwinger || '?'}%` : 
+                              '?%'}
+                        </div>
+                    </div>
+                    
+                    <div className="success-rates mt-2">
+                        {zone && zone.successRate && (
+                            Object.entries(zone.successRate).map(([key, value]) => (
+                                <div className="success-rate" key={key}>
+                                    <span>{key.replace(/([A-Z])/g, ' $1').replace(/^\w/, c => c.toUpperCase())}</span>
+                                    <span className="font-bold">{value}%</span>
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 };

@@ -1,81 +1,89 @@
 import React, { useState } from 'react';
-import PitchVisualization from './PitchVisualization';
 import TeamSelector from './TeamSelector';
+import PitchVisualization from './PitchVisualization';
 import RecommendationPanel from './RecommendationPanel';
 import PlayerStats from './PlayerStats';
 import { generateRecommendation } from '../services/recommendationEngine';
 
 const SetPieceAnalyzer = () => {
-    const [selectedTeamId, setSelectedTeamId] = useState(null);
-    const [clickPosition, setClickPosition] = useState(null);
+    const [selectedTeam, setSelectedTeam] = useState(null);
     const [recommendation, setRecommendation] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     
-    // Handle team selection
     const handleTeamSelect = (teamId) => {
-        setSelectedTeamId(teamId);
-        // Reset recommendation when team changes
-        setRecommendation(null);
-        setClickPosition(null);
-        setError(null);
+        setSelectedTeam(teamId);
+        setRecommendation(null); // Clear previous recommendations when team changes
     };
     
-    // Handle pitch click
-    const handleSetPieceSelect = async (position) => {
-        console.log('Pitch clicked at:', position);
-        setClickPosition(position);
+    const handleLocationSelect = async (coordinates) => {
+        if (!selectedTeam) {
+            setError("Please select a team first");
+            return;
+        }
         
-        if (selectedTeamId) {
-            setLoading(true);
-            setError(null);
-            
-            try {
-                // Generate recommendation based on team and position
-                // Properly await the async result
-                const newRecommendation = await generateRecommendation(selectedTeamId, position);
-                console.log('Recommendation generated:', newRecommendation);
-                setRecommendation(newRecommendation);
-            } catch (err) {
-                console.error('Error generating recommendation:', err);
-                setError('Failed to generate recommendation. Please try again.');
-            } finally {
-                setLoading(false);
-            }
-        } else {
-            setError('Please select a team first');
+        setLoading(true);
+        setError(null);
+        
+        try {
+            const recommendation = await generateRecommendation(selectedTeam, coordinates);
+            setRecommendation(recommendation);
+            setLoading(false);
+        } catch (error) {
+            console.error("Error generating recommendation:", error);
+            setError("Failed to generate recommendation. Please try a different location.");
+            setLoading(false);
         }
     };
     
     return (
-        <div className="set-piece-analyzer">
-            <div className="analyzer-header">
-                <h2>Football Set Piece Analyzer</h2>
-                <p>Select a team and click on the pitch to analyze set piece options</p>
-                {error && <p className="error-message">{error}</p>}
-            </div>
+        <div className="container">
+            <header className="app-header">
+                <div className="app-title">
+                    <img src="/favicon.svg" alt="Tacti-Kick Logo" className="logo" />
+                    <h1>Tacti-Kick</h1>
+                </div>
+            </header>
             
-            <div className="analyzer-content">
-                <div className="sidebar-left">
-                    <TeamSelector 
-                        onTeamSelect={handleTeamSelect}
-                        selectedTeamId={selectedTeamId}
-                    />
-                    <PlayerStats teamId={selectedTeamId} />
+            <main className="app-content">
+                {/* Left sidebar with team selection and player stats */}
+                <div className="sidebar">
+                    <TeamSelector onTeamSelect={handleTeamSelect} />
+                    
+                    <PlayerStats teamId={selectedTeam} />
                 </div>
                 
-                <div className="main-content">
-                    <PitchVisualization 
-                        onSetPieceSelect={handleSetPieceSelect}
-                        recommendation={recommendation}
-                    />
-                    {loading && <div className="loading-indicator">Generating recommendations...</div>}
+                {/* Main content area with visualization and recommendations */}
+                <div className="main-panel">
+                    {error && (
+                        <div className="alert alert-error mb-4">
+                            {error}
+                        </div>
+                    )}
+                    
+                    {loading ? (
+                        <div className="loading-overlay">
+                            <div className="spinner"></div>
+                            <p>Analyzing set piece options...</p>
+                        </div>
+                    ) : (
+                        <>
+                            <PitchVisualization 
+                                onLocationSelect={handleLocationSelect}
+                                recommendation={recommendation}
+                            />
+                            
+                            <RecommendationPanel recommendation={recommendation} />
+                        </>
+                    )}
                 </div>
-                
-                <div className="sidebar-right">
-                    <RecommendationPanel recommendation={recommendation} />
-                </div>
-            </div>
+            </main>
+            
+            <footer className="app-footer mt-4">
+                <p className="text-center text-gray-500 text-sm">
+                    &copy; {new Date().getFullYear()} Tacti-Kick | Advanced Set Piece Analysis
+                </p>
+            </footer>
         </div>
     );
 };

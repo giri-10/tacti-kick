@@ -266,15 +266,30 @@ export const drawTrajectory = (canvas, start, end, type = 'straight', options = 
     } else if (type === 'curved' || type === 'inswinger' || type === 'outswinger') {
         const controlPoint = { x: 0, y: 0 };
         
-        // For inswingers and outswingers, adjust the control point
+        // Determine if we're crossing from left or right side
+        const crossingFromRight = startX > width/2;
+        
+        // For inswingers and outswingers, adjust the control point based on side of pitch
         if (type === 'inswinger') {
-            // Control point is to the "inside" of the path
-            controlPoint.x = (startX + endX) / 2 - (endY - startY) * 0.5;
-            controlPoint.y = (startY + endY) / 2 + (endX - startX) * 0.5;
+            if (crossingFromRight) {
+                // From right side: control point curves inward (left)
+                controlPoint.x = (startX + endX) / 2 - Math.abs(endY - startY) * 0.7;
+                controlPoint.y = (startY + endY) / 2;
+            } else {
+                // From left side: control point curves inward (right)
+                controlPoint.x = (startX + endX) / 2 + Math.abs(endY - startY) * 0.7;
+                controlPoint.y = (startY + endY) / 2;
+            }
         } else if (type === 'outswinger') {
-            // Control point is to the "outside" of the path
-            controlPoint.x = (startX + endX) / 2 + (endY - startY) * 0.5;
-            controlPoint.y = (startY + endY) / 2 - (endX - startX) * 0.5;
+            if (crossingFromRight) {
+                // From right side: control point curves outward (right)
+                controlPoint.x = (startX + endX) / 2 + Math.abs(endY - startY) * 0.7;
+                controlPoint.y = (startY + endY) / 2;
+            } else {
+                // From left side: control point curves outward (left)
+                controlPoint.x = (startX + endX) / 2 - Math.abs(endY - startY) * 0.7;
+                controlPoint.y = (startY + endY) / 2;
+            }
         } else {
             // Generic curved line
             controlPoint.x = (startX + endX) / 2;
