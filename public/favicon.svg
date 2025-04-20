@@ -1,1 +1,29 @@
-<!-- This file is intentionally left blank. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180" fill="none">
+  <!-- Background -->
+  <rect width="180" height="180" rx="24" fill="#2563EB" />
+  
+  <!-- Soccer ball with tactical elements -->
+  <circle cx="90" cy="90" r="55" fill="white" />
+  
+  <!-- Soccer ball pentagons -->
+  <path d="M90 35C93.466 35 96.868 35.304 100.166 35.888L117.995 68.569L88.535 90.608L59.076 68.569L76.904 35.888C80.201 35.304 83.604 35 87.07 35H90Z" fill="#111827" />
+  <path d="M103.096 36.581L124.139 72.154L99.552 101.008L66.519 101.008L41.931 72.154L62.974 36.581C71.604 34.215 80.732 33 90 33C93.035 33 96.07 33.194 99.105 33.581L103.096 36.581Z" fill="#111827" />
+  <path d="M125.614 76.904L107.785 109.585L78.325 109.585L60.497 76.904L90 54.865L125.614 76.904Z" fill="#111827" />
+  <path d="M123.725 115.869L103.304 143.419C95.646 145.572 87.548 146.335 79.513 145.65L59.091 118.1L78.325 90.608L107.785 90.608L123.725 115.869Z" fill="#111827" />
+  <path d="M76.904 144.305L59.076 111.624L41.248 78.942L70.707 56.903L100.166 78.942L117.995 111.624L100.166 144.305C96.868 144.889 93.466 145.193 90 145.193C83.604 145.193 77.275 144.889 70.977 144.305H76.904Z" fill="#111827" />
+  
+  <!-- Tactical arrows and lines -->
+  <path d="M55 90H125" stroke="#F59E0B" stroke-width="6" stroke-linecap="round" />
+  <path d="M90 55V125" stroke="#F59E0B" stroke-width="6" stroke-linecap="round" />
+  
+  <!-- Set piece angle indicator -->
+  <path d="M90 90L130 65" stroke="#10B981" stroke-width="5" stroke-linecap="round" stroke-dasharray="3 3" />
+  <circle cx="130" cy="65" r="7" fill="#10B981" />
+  
+  <!-- Target indicator -->
+  <circle cx="65" cy="120" r="7" fill="#EF4444" />
+  <circle cx="65" cy="120" r="12" stroke="#EF4444" stroke-width="3" stroke-dasharray="3 3" fill="none" />
+  
+  <!-- Tactical position -->
+  <circle cx="110" cy="110" r="7" fill="#F59E0B" />
+</svg>
