@@ -8,6 +8,8 @@
 
 TactiKick is an interactive web application designed to help football analysts, coaches, and enthusiasts optimize their set piece strategies. The application provides data-driven recommendations for corners, free kicks, and penalties based on team composition, player attributes, and pitch position.
 
+[Link](https://tactikick.vercel.app/)
+
 ### Key Features
 
 - **Interactive Pitch Visualization**: Click anywhere on the pitch to analyze optimal set piece strategies for that position
