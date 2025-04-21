@@ -97,7 +97,7 @@ const SetPieceAnalyzer = () => {
             
             <footer className="app-footer mt-4">
                 <p className="text-center text-gray-500 text-sm">
-                    &copy; {new Date().getFullYear()} Tacti-Kick | Advanced Set Piece Analysis
+                    &copy; {new Date().getFullYear()} Tacti-Kick | Football Set Piece Analysis
                 </p>
             </footer>
         </div>
