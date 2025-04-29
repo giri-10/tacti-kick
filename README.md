@@ -67,6 +67,6 @@ TactiKick is built with modern web technologies:
 - **Frontend Framework**: React 18
 - **Styling**: Custom CSS with responsive design
 - **Visualization**: HTML Canvas for pitch and trajectory rendering
-- **Data Management**: JavaScript modules for data handling and transformations
+- **Data Management**: JavaScript for data handling and transformations
 
 
